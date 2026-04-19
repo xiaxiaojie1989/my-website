@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xiaoman Xia — MKTER × AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #080812;
+    --bg2: #0e0e1c;
+    --bg3: #13132a;
+    --text: #e8e8f0;
+    --text-dim: #8888aa;
+    --cyan: oklch(75% 0.18 195);
+    --purple: oklch(68% 0.20 290);
+    --pink: oklch(70% 0.20 330);
+    --border: rgba(255,255,255,0.07);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--purple); color: #fff; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 2px; }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 48px;
+    background: linear-gradient(to bottom, rgba(8,8,18,0.95) 0%, transparent 100%);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    color: var(--cyan);
+    text-transform: uppercase;
+  }
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+    font-family: 'Space Mono', monospace;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 48px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.12;
+    pointer-events: none;
+  }
+  .glow-1 { background: var(--purple); top: -100px; left: 20%; }
+  .glow-2 { background: var(--cyan); bottom: -100px; right: 20%; }
+  .hero-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.25em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .hero-eyebrow::before, .hero-eyebrow::after {
+    content: '//';
+    opacity: 0.5;
+  }
+  .hero-name {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(52px, 8vw, 110px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #fff 0%, var(--text-dim) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .hero-role {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(16px, 2.5vw, 28px);
+    letter-spacing: 0.3em;
+    color: var(--purple);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+  .hero-tagline {
+    font-size: clamp(14px, 1.5vw, 17px);
+    color: var(--text-dim);
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 48px;
+  }
+  .hero-cta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .btn-primary {
+    padding: 14px 32px;
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--cyan);
+    transform: translateY(100%);
+    transition: transform 0.25s;
+    z-index: -1;
+    opacity: 0.15;
+  }
+  .btn-primary:hover::before { transform: translateY(0); }
+  .btn-primary:hover { color: #fff; }
+  .btn-secondary {
+    padding: 14px 32px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.25s;
+  }
+  .btn-secondary:hover { border-color: var(--text-dim); color: var(--text); }
+
+  /* SECTION HEADERS */
+  .section {
+    padding: 100px 48px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--purple);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::before { content: '//'; opacity: 0.5; }
+  .section-title {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    margin-bottom: 48px;
+    line-height: 1.1;
+  }
+  .section-divider {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+    margin: 0 48px;
+    max-width: calc(1200px - 96px);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* PORTFOLIO CARDS */
+  .portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 24px;
+  }
+  .portfolio-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: default;
+  }
+  .portfolio-card:hover {
+    transform: translateY(-4px);
+  }
+  .portfolio-card.card-cyan { box-shadow: 0 0 0 1.5px var(--cyan) inset; }
+  .portfolio-card.card-cyan:hover { box-shadow: 0 0 0 1.5px var(--cyan) inset, 0 20px 60px rgba(0,210,200,0.12); }
+  .portfolio-card.card-purple { box-shadow: 0 0 0 1.5px var(--purple) inset; }
+  .portfolio-card.card-purple:hover { box-shadow: 0 0 0 1.5px var(--purple) inset, 0 20px 60px rgba(140,80,255,0.12); }
+  .portfolio-card.card-pink { box-shadow: 0 0 0 1.5px var(--pink) inset; }
+  .portfolio-card.card-pink:hover { box-shadow: 0 0 0 1.5px var(--pink) inset, 0 20px 60px rgba(255,80,180,0.12); }
+
+  .card-image {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: var(--bg3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-image-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dim);
+    font-size: 12px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.1em;
+  }
+  .card-image-placeholder svg { opacity: 0.3; }
+  .card-image-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    opacity: 0.5;
+  }
+  .card-body { padding: 24px; }
+  .card-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .tag {
+    padding: 3px 10px;
+    border-radius: 2px;
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.08em;
+    border: 1px solid;
+  }
+  .tag-cyan { color: var(--cyan); border-color: var(--cyan); background: rgba(0,210,200,0.06); }
+  .tag-purple { color: var(--purple); border-color: var(--purple); background: rgba(140,80,255,0.06); }
+  .tag-pink { color: var(--pink); border-color: var(--pink); background: rgba(255,80,180,0.06); }
+  .tag-dim { color: var(--text-dim); border-color: var(--border); }
+
+  .card-detail {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: flex-start;
+  }
+  .card-detail-icon { flex-shrink: 0; margin-top: 1px; opacity: 0.6; }
+
+  /* ABOUT */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: start;
+  }
+  .about-text p {
+    font-size: 15px;
+    color: var(--text-dim);
+    line-height: 1.8;
+    margin-bottom: 16px;
+  }
+  .about-text p strong { color: var(--text); font-weight: 500; }
+  .about-stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+  }
+  .about-stat {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 28px 24px;
+  }
+  .about-stat-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--cyan);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .about-stat-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+
+  /* SKILLS */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+  .skill-block {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 32px 28px;
+    transition: background 0.2s;
+  }
+  .skill-block:hover { background: var(--bg3); }
+  .skill-block-icon {
+    width: 36px; height: 36px;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    font-size: 18px;
+  }
+  .skill-block-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .skill-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .skill-list li {
+    font-size: 13px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .skill-list li::before {
+    content: '';
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+    opacity: 0.5;
+  }
+
+  /* EXPERIENCE */
+  .exp-list { display: flex; flex-direction: column; gap: 2px; }
+  .exp-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 32px 36px;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 36px;
+    transition: background 0.2s;
+  }
+  .exp-item:hover { background: var(--bg3); }
+  .exp-meta { }
+  .exp-year {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--purple);
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+  .exp-company {
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+  .exp-role {
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .exp-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+
+  /* CONTACT */
+  .contact-inner {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .contact-inner::before {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px;
+    background: var(--purple);
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.07;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .contact-title {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(24px, 4vw, 48px);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+  }
+  .contact-sub {
+    font-size: 14px;
+    color: var(--text-dim);
+    max-width: 440px;
+    line-height: 1.7;
+  }
+  .contact-links {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .contact-link {
+    padding: 12px 28px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .contact-link:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  /* FOOTER */
+  footer {
+    padding: 32px 48px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  footer .footer-left {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+  footer .footer-right {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  /* TWEAKS PANEL */
+  .tweaks-panel {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    z-index: 200;
+    min-width: 220px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .tweaks-panel h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 16px;
+  }
+  .tweak-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .tweak-row label {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+  }
+  .tweak-row select, .tweak-row input[type="range"] {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    width: 100%;
+    cursor: pointer;
+    outline: none;
+  }
+  .tweak-row input[type="range"] { padding: 4px 0; }
+
+  /* SCROLL ANIMATIONS */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    .section { padding: 60px 20px; }
+    .about-grid { grid-template-columns: 1fr; gap: 40px; }
+    .skills-grid { grid-template-columns: 1fr; }
+    .exp-item { grid-template-columns: 1fr; gap: 12px; }
+    .contact-inner { padding: 40px 24px; }
+    footer { flex-direction: column; gap: 8px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+
+
+const { useState, useEffect, useRef } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accentScheme": "cyan-purple",
+  "heroSize": "large",
+  "cardLayout": "grid"
+}/*EDITMODE-END*/;
+
+// Intersection observer hook for scroll animations
+function useFadeIn() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {el.classList.add('visible');obs.disconnect();}
+    }, { threshold: 0.1 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return ref;
+}
+
+const FadeIn = ({ children, delay = 0, style = {} }) => {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transitionDelay = delay + 'ms';
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {el.classList.add('visible');obs.disconnect();}
+    }, { threshold: 0.08 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return <div ref={ref} className="fade-in" style={style}>{children}</div>;
+};
+
+const ImagePlaceholder = ({ label, color }) =>
+<div className="card-image">
+    <div className="card-image-placeholder">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <rect x="4" y="8" width="40" height="32" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <circle cx="16" cy="20" r="4" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M4 34L16 22L26 32L32 26L44 36" stroke="currentColor" strokeWidth="1.5" />
+      </svg>
+      <span className="card-image-label">{label}</span>
+    </div>
+    <div style={{
+    position: 'absolute', inset: 0,
+    background: `linear-gradient(135deg, ${color}08 0%, transparent 60%)`,
+    pointerEvents: 'none'
+  }} />
+  </div>;
+
+
+function App() {
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [tweaksVisible, setTweaksVisible] = useState(false);
+  const [activeSection, setActiveSection] = useState('hero');
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data?.type === '__activate_edit_mode') setTweaksVisible(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweaksVisible(false);
+    };
+    window.addEventListener('message', handler);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  const updateTweak = (key, val) => {
+    const next = { ...tweaks, [key]: val };
+    setTweaks(next);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: next }, '*');
+  };
+
+  const navLinks = [
+  { href: '#portfolio', en: 'Portfolio', zh: '作品集' },
+  { href: '#about', en: 'About', zh: '关于我' },
+  { href: '#skills', en: 'Skills', zh: '技能' },
+  { href: '#contact', en: 'Contact', zh: '联系' }];
+
+
+  const projects = [
+  {
+    color: 'cyan',
+    title: 'Coca-Cola Nickname Bottles',
+    titleZh: '可口可乐昵称瓶',
+    tags: [
+    { label: 'Brand Strategy', cls: 'tag-cyan' },
+    { label: 'Viral Marketing', cls: 'tag-dim' },
+    { label: 'Campaign', cls: 'tag-dim' }],
+
+    desc: "Pioneered China's first personalized packaging campaign, turning Coke cans into viral social currency that sparked a nationwide sharing phenomenon.",
+    descZh: '开创中国首个个性化包装营销活动，将可乐罐变为病毒式传播的社交货币，引爆全国话题。',
+    tool: 'Social Strategy + Mass Media',
+    imgLabel: 'Campaign Key Visual',
+    imgSrc: 'uploads/pasted-1776578414935-0.png',
+  },
+  {
+    color: 'purple',
+    title: 'Black Pearl Restaurant Guide',
+    titleZh: '黑珍珠餐厅指南',
+    tags: [
+    { label: 'IP Creation', cls: 'tag-purple' },
+    { label: 'F&B Industry', cls: 'tag-dim' },
+    { label: 'Brand Building', cls: 'tag-dim' }],
+
+    desc: "Launched China's first homegrown fine dining recognition platform, growing it from zero into a multi-million RMB industry IP and cultural touchstone.",
+    descZh: '创立中国首个本土高端餐饮榜单，从零到亿级行业IP，成为餐饮文化标志。',
+    tool: 'Platform Strategy + Content Ecosystem',
+    imgLabel: 'Brand Identity',
+    imgSrc: 'uploads/pasted-1776578176873-0.png',
+  },
+  {
+    color: 'pink',
+    title: 'AI × Marketing Lab',
+    titleZh: 'AI × 营销实验室',
+    tags: [
+    { label: 'AI Tools', cls: 'tag-pink' },
+    { label: 'Automation', cls: 'tag-dim' },
+    { label: 'Ongoing', cls: 'tag-dim' }],
+
+    desc: 'Exploring the frontier of AI-powered marketing workflows — from generative content to intelligent campaign optimization.',
+    descZh: '探索 AI 驱动的营销新范式——从生成式内容到智能投放优化。',
+    tool: 'LLMs + Automation Tools',
+    imgLabel: 'AI Workflow Diagram',
+    imgSrc: 'uploads/ai-marketing-lab.svg',
+  }];
+
+
+  const skills = [
+  {
+    icon: '◈',
+    color: 'var(--cyan)',
+    title: 'Brand Strategy',
+    titleZh: '品牌策略',
+    items: ['Insight Mining', 'Brand Architecture', 'Positioning', 'Campaign Planning', 'Consumer Research']
+  },
+  {
+    icon: '◉',
+    color: 'var(--purple)',
+    title: 'AI × Marketing',
+    titleZh: 'AI 营销',
+    items: ['Prompt Engineering', 'Workflow Automation', 'Generative Content', 'LLM Applications', 'AI Tool Stack']
+  },
+  {
+    icon: '◆',
+    color: 'var(--pink)',
+    title: 'Content & Social',
+    titleZh: '内容与社交',
+    items: ['Content Strategy', 'Social Campaigns', 'KOL Ecosystem', 'Viral Mechanics', 'Storytelling']
+  }];
+
+
+  const experiences = [
+  {
+    year: '2020 — Present',
+    company: 'Independent',
+    role: 'MKTER × AI Explorer',
+    desc: 'Building at the intersection of humanist marketing and frontier AI tools. Exploring how technology can amplify authentic human connection in brand storytelling.',
+    descZh: '在人文营销与前沿 AI 工具的交叉地带构建新方法论。'
+  },
+  {
+    year: '2018 — 2020',
+    company: 'Meituan / 美团',
+    role: 'Brand Marketing Lead',
+    desc: 'Led the launch and growth of Black Pearl Restaurant Guide — China\'s first homegrown fine dining recognition platform. Built from zero to industry IP.',
+    descZh: '主导黑珍珠餐厅指南的创立与成长，从零打造行业标杆 IP。'
+  },
+  {
+    year: '2014 — 2018',
+    company: 'Coca-Cola China',
+    role: 'Senior Brand Manager',
+    desc: 'Pioneered the Nickname Bottles campaign — China\'s first personalized packaging initiative that became a viral social phenomenon with nationwide impact.',
+    descZh: '主导昵称瓶战役，开创中国首个个性化包装营销，引发全国热潮。'
+  }];
+
+
+  return (
+    <>
+      {/* NAV */}
+      <nav>
+        <div className="nav-logo">XX</div>
+        <ul className="nav-links">
+          {navLinks.map((l) =>
+          <li key={l.href}><a href={l.href}>{l.en} <span style={{ opacity: 0.4, fontSize: '10px' }}>/ {l.zh}</span></a></li>
+          )}
+        </ul>
+      </nav>
+
+      {/* HERO */}
+      <section className="hero" id="hero" data-screen-label="Hero">
+        <div className="hero-glow glow-1" />
+        <div className="hero-glow glow-2" />
+        <div className="hero-eyebrow">Xiaoman Xia</div>
+        <h1 className="hero-name">MKTER<br />× AI</h1>
+        <div className="hero-role">夏小曼</div>
+        <p className="hero-tagline">
+          Exploring the frontier of AI tools and humanist marketing<br />
+          <span style={{ opacity: 0.5, fontSize: '13px' }}>探索 AI 工具前沿与人文营销的交汇点</span>
+        </p>
+        <div className="hero-cta">
+          <a href="#portfolio" className="btn-primary">View Work // 查看作品</a>
+          <a href="#contact" className="btn-secondary">Get in Touch</a>
+        </div>
+      </section>
+
+      <div className="section-divider" />
+
+      {/* PORTFOLIO */}
+      <section className="section" id="portfolio" data-screen-label="Portfolio">
+        <FadeIn>
+          <div className="section-label">Selected Work</div>
+          <div className="section-title">作品集<br /><span style={{ fontSize: '0.6em', opacity: 0.4 }}>Portfolio</span></div>
+        </FadeIn>
+        <div className="portfolio-grid">
+          {projects.map((p, i) =>
+          <FadeIn key={p.title} delay={i * 120}>
+              <div className={`portfolio-card card-${p.color}`}>
+                {p.imgSrc
+                  ? <div className="card-image"><img src={p.imgSrc} style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center'}} alt={p.title}/></div>
+                  : <ImagePlaceholder label={p.imgLabel} color={p.color === 'cyan' ? '#00d4c8' : p.color === 'purple' ? '#9b5cf6' : '#f06'} />
+                }
+                <div className="card-body">
+                  <div className="card-title">{p.title}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-dim)', marginBottom: '12px', fontFamily: 'Space Mono, monospace', letterSpacing: '0.05em' }}>{p.titleZh}</div>
+                  <div className="card-tags">
+                    {p.tags.map((t) => <span key={t.label} className={`tag ${t.cls}`}>{t.label}</span>)}
+                  </div>
+                  <div className="card-detail">
+                    <span className="card-detail-icon">◎</span>
+                    <span>{p.desc}</span>
+                  </div>
+                  <div className="card-detail" style={{ marginBottom: 0 }}>
+                    <span className="card-detail-icon">⚙</span>
+                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '11px' }}>{p.tool}</span>
+                  </div>
+                </div>
+              </div>
+            </FadeIn>
+          )}
+        </div>
+      </section>
+
+      <div className="section-divider" />
+
+      {/* ABOUT */}
+      <section className="section" id="about" data-screen-label="About">
+        <FadeIn>
+          <div className="section-label">Background</div>
+          <div className="section-title">关于我<br /><span style={{ fontSize: '0.6em', opacity: 0.4 }}>About</span></div>
+        </FadeIn>
+        <div className="about-grid">
+          <FadeIn delay={100}>
+            <div className="about-text">
+              <p>我是<strong>夏小曼</strong>，一个在品牌营销领域深耕多年、同时拥抱 AI 浪潮的营销人。</p>
+              <p>I believe the most powerful marketing is <strong>deeply human</strong> — built on genuine insight, cultural resonance, and emotional truth. But the future of marketing is also <strong>augmented by intelligence</strong>.</p>
+              <p>我的工作横跨快消品牌战略、平台 IP 打造与 AI 工具探索。从可口可乐昵称瓶到黑珍珠餐厅指南，我持续在实践中定义下一代营销方法论。</p>
+            </div>
+          </FadeIn>
+          <FadeIn delay={200}>
+            <div className="about-stat-grid">
+              {[
+              { num: '10+', label: 'Years in Brand Marketing' },
+              { num: '2', label: 'Industry-defining Campaigns' },
+              { num: '∞', label: 'AI Tools Explored' },
+              { num: 'Now', label: 'Building the Intersection' }].
+              map((s) =>
+              <div className="about-stat" key={s.label}>
+                  <div className="about-stat-num">{s.num}</div>
+                  <div className="about-stat-label">{s.label}</div>
+                </div>
+              )}
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
+      <div className="section-divider" />
+
+      {/* SKILLS */}
+      <section className="section" id="skills" data-screen-label="Skills">
+        <FadeIn>
+          <div className="section-label">Expertise</div>
+          <div className="section-title">技能<br /><span style={{ fontSize: '0.6em', opacity: 0.4 }}>Skills</span></div>
+        </FadeIn>
+        <FadeIn delay={100}>
+          <div className="skills-grid">
+            {skills.map((s, i) =>
+            <div className="skill-block" key={s.title}>
+                <div className="skill-block-icon" style={{ background: s.color + '18', color: s.color }}>
+                  <span>{s.icon}</span>
+                </div>
+                <div className="skill-block-title" style={{ color: s.color }}>{s.title}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginBottom: '14px', fontFamily: 'Space Mono, monospace', letterSpacing: '0.05em' }}>{s.titleZh}</div>
+                <ul className="skill-list">
+                  {s.items.map((item) => <li key={item} style={{ color: 'var(--text-dim)' }}>{item}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+        </FadeIn>
+      </section>
+
+      <div className="section-divider" />
+
+      {/* CONTACT */}
+      <section className="section" id="contact" data-screen-label="Contact">
+        <FadeIn>
+          <div className="section-label">Get in Touch</div>
+        </FadeIn>
+        <FadeIn delay={100}>
+          <div className="contact-inner">
+            <div className="contact-title">Let's Build<br />Something Real</div>
+            <p className="contact-sub">
+              对品牌策略、AI 工具探索或合作有想法？<br />
+              Interested in brand strategy, AI tools, or collaboration?
+            </p>
+            <div className="contact-links">
+              <a className="contact-link" href="mailto:xiaxiaojie1989@gmail.com">xiaxiaojie1989@gmail.com</a>
+              <a className="contact-link" href="#">小红书 // 夏小曼</a>
+            </div>
+          </div>
+        </FadeIn>
+      </section>
+
+      {/* FOOTER */}
+      <footer>
+        <div className="footer-left">© 2026 XIAOMAN XIA — MKTER × AI</div>
+        <div className="footer-right" style={{ color: 'var(--text-dim)', fontFamily: 'Space Mono, monospace', fontSize: '11px', letterSpacing: '0.05em' }}>
+          exploring the frontier
+        </div>
+      </footer>
+
+      {/* TWEAKS PANEL */}
+      {tweaksVisible &&
+      <div className="tweaks-panel">
+          <h3>Tweaks</h3>
+          <div className="tweak-row">
+            <label>Accent Color</label>
+            <select value={tweaks.accentScheme} onChange={(e) => {
+            const v = e.target.value;
+            updateTweak('accentScheme', v);
+            const root = document.documentElement;
+            if (v === 'cyan-purple') {
+              root.style.setProperty('--cyan', 'oklch(75% 0.18 195)');
+              root.style.setProperty('--purple', 'oklch(68% 0.20 290)');
+              root.style.setProperty('--pink', 'oklch(70% 0.20 330)');
+            } else if (v === 'amber-red') {
+              root.style.setProperty('--cyan', 'oklch(78% 0.18 75)');
+              root.style.setProperty('--purple', 'oklch(68% 0.22 30)');
+              root.style.setProperty('--pink', 'oklch(70% 0.20 15)');
+            } else if (v === 'green-blue') {
+              root.style.setProperty('--cyan', 'oklch(75% 0.18 155)');
+              root.style.setProperty('--purple', 'oklch(68% 0.18 240)');
+              root.style.setProperty('--pink', 'oklch(70% 0.20 210)');
+            }
+          }}>
+              <option value="cyan-purple">Cyan + Purple</option>
+              <option value="amber-red">Amber + Red</option>
+              <option value="green-blue">Green + Blue</option>
+            </select>
+          </div>
+          <div className="tweak-row">
+            <label>Background Depth</label>
+            <input type="range" min="0" max="30" defaultValue="8" onChange={(e) => {
+            const v = parseInt(e.target.value);
+            document.documentElement.style.setProperty('--bg', `oklch(${4 + v * 0.4}% 0.02 270)`);
+          }} />
+          </div>
+        </div>
+      }
+    </>);
+
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
